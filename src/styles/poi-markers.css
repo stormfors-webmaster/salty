@@ -1,0 +1,108 @@
+/* POI Marker Styles */
+
+/* Base POI marker style */
+.poi-marker {
+  position: relative;
+  background-color: white;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Style for Material Icons */
+.material-icons.poi-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Marker type-specific colors */
+.marker-type-lifeguard {
+  background-color: #ffebee; /* Light red background */
+  border: 2px solid #e74c3c;
+}
+.marker-type-lifeguard .material-icons {
+  color: #e74c3c;
+}
+
+.marker-type-firstaid,
+.marker-type-first-aid,
+.marker-type-firstaid-station,
+.marker-type-first-aid-station {
+  background-color: #ffebee; /* Light red background */
+  border: 2px solid #e74c3c;
+}
+.marker-type-firstaid .material-icons,
+.marker-type-first-aid .material-icons,
+.marker-type-firstaid-station .material-icons,
+.marker-type-first-aid-station .material-icons {
+  color: #e74c3c;
+}
+
+.marker-type-toilet {
+  background-color: #e3f2fd; /* Light blue background */
+  border: 2px solid #3498db;
+}
+.marker-type-toilet .material-icons {
+  color: #3498db;
+}
+
+.marker-type-showers {
+  background-color: #e3f2fd; /* Light blue background */
+  border: 2px solid #3498db;
+}
+.marker-type-showers .material-icons {
+  color: #3498db;
+}
+
+.marker-type-parking {
+  background-color: #e8f5e9; /* Light green background */
+  border: 2px solid #2980b9;
+}
+.marker-type-parking .material-icons {
+  color: #2980b9;
+}
+
+.marker-type-restaurant {
+  background-color: #fff3e0; /* Light orange background */
+  border: 2px solid #e67e22;
+}
+.marker-type-restaurant .material-icons {
+  color: #e67e22;
+}
+
+.marker-type-picnic,
+.marker-type-picnic-area {
+  background-color: #f1f8e9; /* Light green background */
+  border: 2px solid #27ae60;
+}
+.marker-type-picnic .material-icons,
+.marker-type-picnic-area .material-icons {
+  color: #27ae60;
+}
+
+.marker-type-camping {
+  background-color: #f1f8e9; /* Light green background */
+  border: 2px solid #27ae60;
+}
+.marker-type-camping .material-icons {
+  color: #27ae60;
+}
+
+.marker-type-pier {
+  background-color: #efebe9; /* Light brown background */
+  border: 2px solid #5d4037;
+}
+.marker-type-pier .material-icons {
+  color: #5d4037;
+}
+
+/* Add hover effect for all markers */
+.poi-marker:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+  z-index: 100;
+}

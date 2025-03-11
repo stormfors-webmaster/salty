@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POI Marker Test</title>
+    <style>
+        .poi-marker {
+            /* Inherit all beach-marker styles but add a slight customization */
+            border-color: #4caf50 !important;
+            /* Green border to distinguish from beaches */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>POI Marker Test</h1>
+    <p>This page contains hidden elements with temp-data=poi attributes to test the POI marker functionality.</p>
+    <p>The markers should only appear when the map is zoomed in to level 15 or higher.</p>
+
+    <!-- Test POI markers - these will be hidden and only used by the map.js code -->
+    <!-- Huntington Beach Area POIs -->
+    <div temp-data="poi" temp-id="poi-1" lat="33.6559807" lon="-118.0033719" popup-text="Huntington Beach Pier"
+        name="Pier"></div>
+    <div temp-data="poi" temp-id="poi-2" lat="33.6580000" lon="-118.0050000" popup-text="Surf Shop" name="Shop"></div>
+    <div temp-data="poi" temp-id="poi-3" lat="33.6600000" lon="-118.0020000" popup-text="Beach Parking" name="Parking">
+    </div>
+
+    <!-- Newport Beach Area POIs -->
+    <div temp-data="poi" temp-id="poi-4" lat="33.608188" lon="-117.9297184" popup-text="Newport Beach Restaurant"
+        name="Restaurant"></div>
+    <div temp-data="poi" temp-id="poi-5" lat="33.6100000" lon="-117.9280000" popup-text="Restrooms" name="Facilities">
+    </div>
+
+    <!-- Testing the boundary of zoom level -->
+    <div temp-data="poi" temp-id="boundary-test" lat="33.6200000" lon="-117.9500000" popup-text="Zoom Boundary Test"
+        name="Test"></div>
+
+    <!-- Add some control buttons -->
+    <div
+        style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; background: white; padding: 10px; border-radius: 5px;">
+        <button id="test-show-all">Show All POIs</button>
+        <button id="test-hide-all">Hide All POIs</button>
+        <button id="test-toggle-poi-1">Toggle Pier Popup</button>
+    </div>
+
+    <script>
+        // After the map is loaded, we can add click handlers for the test buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            // Give the map time to initialize
+            setTimeout(() => {
+                if (window.mapModule) {
+                    document.getElementById('test-show-all').addEventListener('click', () => {
+                        window.mapModule.showAllPOIMarkers();
+                    });
+
+                    document.getElementById('test-hide-all').addEventListener('click', () => {
+                        window.mapModule.hideAllPOIMarkers();
+                    });
+
+                    document.getElementById('test-toggle-poi-1').addEventListener('click', () => {
+                        window.mapModule.togglePOIPopup('poi-1');
+                    });
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+
+</html>

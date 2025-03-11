@@ -45,7 +45,7 @@ async function initHomepage() {
     itemWidth: "22rem",
     stepSize: 1,
     maxItems: 10,
-    categoryUrl: "/product-categories/kiddos",
+    categoryUrl: "/store/kiddos",
   });
 
   const sliderSun = new Slider({
@@ -55,7 +55,7 @@ async function initHomepage() {
     itemWidth: "22rem",
     stepSize: 1,
     maxItems: 10,
-    categoryUrl: "/product-categories/sun-protection",
+    categoryUrl: "/store/sun-protection",
   });
 
   const sliderTransport = new Slider({
@@ -65,7 +65,7 @@ async function initHomepage() {
     itemWidth: "22rem",
     stepSize: 1,
     maxItems: 10,
-    categoryUrl: "/product-categories/transport",
+    categoryUrl: "/store/transport",
   });
 }
 
@@ -79,7 +79,7 @@ function initStore() {
     itemWidth: "22rem",
     stepSize: 1,
     maxItems: 10,
-    categoryUrl: "/product-categories/kiddos",
+    categoryUrl: "/store/kiddos",
   });
 
   const sliderSun = new Slider({
@@ -89,7 +89,7 @@ function initStore() {
     itemWidth: "22rem",
     stepSize: 1,
     maxItems: 10,
-    categoryUrl: "/product-categories/sun-protection",
+    categoryUrl: "/store/sun-protection",
   });
 
   const sliderTransport = new Slider({
@@ -99,6 +99,6 @@ function initStore() {
     itemWidth: "22rem",
     stepSize: 1,
     maxItems: 10,
-    categoryUrl: "/product-categories/transport",
+    categoryUrl: "/store/transport",
   });
 }

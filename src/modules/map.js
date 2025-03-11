@@ -3,8 +3,12 @@ export function map() {
   const mapboxToken =
     "pk.eyJ1IjoiZmVsaXhoZWxsc3Ryb20iLCJhIjoiY20zaXhucjcwMDVwdTJqcG83ZjMxemJlciJ9._TipZd1k8nMEslWbCDg6Eg";
 
-  let mapDefaultZoom = 9;
-  let mapStartPosition = [-118.37655405160609, 33.78915439099377];
+  let sateliteMap =
+    "mapbox://styles/felixhellstrom/cm7x0dpvq011w01sm5bdzap1c?optimize=true";
+  let standardMap = "mapbox://styles/cv-mapbox/cm5zh2w0i002g01sfdcrs6dgj";
+
+  let mapDefaultZoom = 3;
+  let mapStartPosition = [-144.81125912, 33.6893667];
   let mapStartPitch = 0;
 
   //mapbox://styles/cv-mapbox/cm5zgyf7a002m01sgf936d3u6
@@ -12,7 +16,7 @@ export function map() {
   mapboxgl.accessToken = mapboxToken;
   const map = new mapboxgl.Map({
     container: "map",
-    style: "mapbox://styles/cv-mapbox/cm5zh2w0i002g01sfdcrs6dgj",
+    style: sateliteMap,
     projection: "globe",
     zoom: mapDefaultZoom,
     center: mapStartPosition,
@@ -43,25 +47,26 @@ export function map() {
   };
 
   const markers = new Map(); // Store markers with their IDs
+  const poiMarkers = new Map(); // Store POI markers separately
 
   init();
 
   async function init() {
     addClickEvents();
     setBeachMarkersFromHTML();
-    // Check URL parameters for beaches query
+    setupPOIMarkers();
+
     if (window.location.search.includes("beaches")) {
       console.log("beaches query found");
       closeHomeSidebar();
       openBeachListSidebar();
-      // Clear URL parameters after handling them
       window.history.pushState({}, "", window.location.pathname);
     }
 
     if (window.innerWidth <= 991) {
       $(".mapboxgl-ctrl-bottom-right").hide();
     }
-    //logMapCoordinates();
+    logMapCoordinates();
   }
 
   function setBeachMarkersFromHTML() {
@@ -111,7 +116,7 @@ export function map() {
       console.log(id);
       map.flyTo({
         center: [lng, lat],
-        zoom: 14,
+        zoom: 18,
         pitch: 75,
       });
       hideAllSidebars();
@@ -165,7 +170,7 @@ export function map() {
         toggleMarkerPopup(tempID);
         map.flyTo({
           center: [lon, lat],
-          zoom: 14,
+          zoom: 18,
           pitch: 75,
         });
         openBeachSidebar(tempID);
@@ -417,6 +422,166 @@ export function map() {
       const popup = marker.getPopup();
       if (popup.isOpen()) {
         popup.remove();
+      }
+    });
+  }
+
+  function setupPOIMarkers() {
+    console.log("Setting up POI markers...");
+
+    // Define Material Icons mappings for different POI types
+    const poiIconMappings = {
+      lifeguard: "ef73", // "Support" icon for lifeguard
+      firstaid: "e3f3", // "local_hospital"
+      firstaidstation: "e3f3", // "local_hospital"
+      toilet: "e05a", // "wc"
+      showers: "e547", // "shower"
+      parking: "e54f", // "local_parking"
+      restaurant: "e56c", // "restaurant"
+      picnic: "ea48", // "park"
+      picnicarea: "ea48", // "park"
+      camping: "e3fa", // "outdoor_grill"
+      pier: "e568", // "directions_boat"
+    };
+
+    // Find all POI elements in the DOM
+    let poiElements = document.querySelectorAll("[temp-data=poi]");
+    console.log(`Found ${poiElements.length} POI elements in the DOM`);
+
+    poiElements.forEach((element) => {
+      let id = element.getAttribute("temp-id");
+      let lat = parseFloat(element.getAttribute("lat"));
+      let lon = parseFloat(element.getAttribute("lon"));
+      // Get the POI type for custom icon from marker-type attribute
+      let markerType = element.getAttribute("marker-type") || "default";
+
+      // Validate coordinates
+      if (
+        isNaN(lat) ||
+        isNaN(lon) ||
+        lat < -90 ||
+        lat > 90 ||
+        lon < -180 ||
+        lon > 180
+      ) {
+        console.warn(
+          `Invalid coordinates for POI ${id}: lat=${lat}, lon=${lon}`
+        );
+        return;
+      }
+
+      let coordinates = [lon, lat];
+      let popupText =
+        element.getAttribute("popup-text") ||
+        element.getAttribute("name") ||
+        `POI ${id}`;
+
+      console.log(
+        `Creating POI marker: ${id} at [${lon}, ${lat}] with text: ${popupText}, type: ${markerType}`
+      );
+
+      // Create marker element with appropriate styling
+      let markerElement = document.createElement("div");
+
+      // Add base classes for all POI markers
+      markerElement.className = "beach-marker poi-marker";
+
+      // Format marker type for class name (replace spaces with hyphens)
+      const cssClassName = markerType.toLowerCase().replace(/\s+/g, "-");
+      markerElement.classList.add(`marker-type-${cssClassName}`);
+
+      // Create icon element using Material Icons
+      const lowerMarkerType = markerType.toLowerCase();
+      const iconKey = lowerMarkerType.replace(/\s+/g, ""); // Remove spaces for object lookup
+      const iconCode = poiIconMappings[iconKey] || "e55f"; // "place" is default marker
+
+      // Create the icon element using Material Icons font
+      const iconSpan = document.createElement("span");
+      iconSpan.className = "material-icons poi-icon";
+      iconSpan.innerHTML = `&#x${iconCode};`; // Use the hex code point
+
+      // Add icon to marker element
+      markerElement.appendChild(iconSpan);
+
+      markerElement.id = `poi-${id}`;
+
+      // Create the popup
+      let popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<div>${popupText}</div>`
+      );
+
+      // Create the marker but don't add to map yet
+      const marker = new mapboxgl.Marker(markerElement)
+        .setLngLat(coordinates)
+        .setPopup(popup);
+
+      // Store in POI markers collection
+      poiMarkers.set(id, marker);
+
+      // Setup popup events (similar to beach markers)
+      popup.on("open", () => {
+        let lng = popup.getLngLat().lng;
+        let lat = popup.getLngLat().lat;
+        console.log(`POI popup opened: ${id}`);
+        map.flyTo({
+          center: [lng, lat],
+          zoom: 18,
+          pitch: 75,
+        });
+      });
+    });
+
+    // Update POI marker visibility based on zoom level
+    updatePOIVisibility();
+
+    // Add zoom change listener
+    map.on("zoom", updatePOIVisibility);
+  }
+
+  function updatePOIVisibility() {
+    const currentZoom = map.getZoom();
+    console.log(`Current zoom level: ${currentZoom}`);
+
+    poiMarkers.forEach((marker, id) => {
+      if (currentZoom >= 15) {
+        // Show marker if it's not already on the map
+        if (!marker.getElement().parentNode) {
+          console.log(`Adding POI marker: ${id} at zoom level ${currentZoom}`);
+          marker.addTo(map);
+        }
+      } else {
+        // Remove marker if it's on the map
+        if (marker.getElement().parentNode) {
+          console.log(
+            `Removing POI marker: ${id} at zoom level ${currentZoom}`
+          );
+          marker.remove();
+        }
+      }
+    });
+  }
+
+  // Toggle a specific POI marker's popup
+  function togglePOIPopup(id) {
+    const marker = poiMarkers.get(id);
+    if (marker) {
+      marker.togglePopup();
+    }
+  }
+
+  // Show/hide all POI markers (regardless of zoom level)
+  function showAllPOIMarkers() {
+    poiMarkers.forEach((marker) => {
+      if (!marker.getElement().parentNode) {
+        marker.addTo(map);
+      }
+    });
+  }
+
+  function hideAllPOIMarkers() {
+    poiMarkers.forEach((marker) => {
+      if (marker.getElement().parentNode) {
+        marker.remove();
       }
     });
   }
