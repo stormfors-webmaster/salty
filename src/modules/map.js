@@ -135,14 +135,14 @@ export function map() {
   function addClickEvents() {
     document.addEventListener("click", (e) => {
       //open home sidebar
-      if (e.target.matches("[open-sidebar=home], [open-sidebar=home] *")) {
+      /* if (e.target.matches("[open-sidebar=home], [open-sidebar=home] *")) {
         e.preventDefault();
         hideAllSidebars();
         openHomeSidebar();
         resetMapPosition();
-      }
+      } */
       //click on beach list buttons
-      if (
+      /* if (
         e.target.matches(
           "[open-sidebar=beach-list], [open-sidebar=beach-list] *"
         )
@@ -158,7 +158,7 @@ export function map() {
         if (window.innerWidth <= 479) {
           openBeachListSidebar();
         }
-      }
+      } */
       //click on beach list item
       if (e.target.matches("[map-link=item], [map-link=item] *")) {
         const target = e.target.matches("[map-link=item]")
@@ -188,14 +188,14 @@ export function map() {
         openBeachListSidebar();
       }
 
-      if (e.target.matches("[map-function=expand]")) {
+      /* if (e.target.matches("[map-function=expand]")) {
         expandMap();
         setTimeout(() => {
           $("[sidebar-toggle=beach-list]").show();
           $(".mapboxgl-ctrl-bottom-right").show();
         }, 1000);
-      }
-      if (
+      } */
+      /*  if (
         e.target.matches("[map-function=collapse] *, [map-function=collapse]")
       ) {
         collapseMap();
@@ -209,19 +209,19 @@ export function map() {
         });
         $("[sidebar-toggle=beach-list]").hide();
         $(".mapboxgl-ctrl-bottom-right").hide();
-      }
-      if (e.target.matches("[toggle-sidebar=home]")) {
+      } */
+      /* if (e.target.matches("[toggle-sidebar=home]")) {
         toggleHomeSidebar();
       }
       if (e.target.matches("[toggle-sidebar=beach-list]")) {
         toggleBeachListSidebar();
-      }
+      } */
       //mobile beach close button
-      if (e.target.matches(".mob-beach-top-inner, .mob-beach-top-inner *")) {
+      /* if (e.target.matches(".mob-beach-top-inner, .mob-beach-top-inner *")) {
         console.log("mob-beach-top-inner clicked");
         closeBeachSidebar();
         openBeachListSidebar();
-      }
+      } */
       if (e.target.matches("[stormfors-sort=reverse]")) {
         const beachList = document.querySelector(".beach-list_list");
         const beachItems = [...beachList.children];
@@ -292,21 +292,17 @@ export function map() {
 
   function openHomeSidebar() {
     window.scrollTo({ top: 0, behavior: "instant" });
-    $("[sidebar=home]").removeClass("folded");
-    $("[sidebar-toggle=home]").removeClass("folded");
+    $("[sidebar=home]").show();
+    $("[sidebar-toggle=home]").show();
     setTimeout(() => {
       $("[map-function=expand]").show();
-      $("[home-toggle-icon=when-open]").show();
-      $("[home-toggle-icon=when-closed]").hide();
     }, 500);
   }
 
   function closeHomeSidebar() {
     window.scrollTo({ top: 0, behavior: "instant" });
-    $("[sidebar=home]").addClass("folded");
-    $("[sidebar-toggle=home]").addClass("folded");
-    $("[home-toggle-icon=when-open]").hide();
-    $("[home-toggle-icon=when-closed]").show();
+    $("[sidebar=home]").hide();
+    $("[sidebar-toggle=home]").hide();
   }
 
   function openBeachListSidebar() {
@@ -319,26 +315,16 @@ export function map() {
     }
     $("[sidebar-toggle=beach-list]").removeClass("folded");
     $("[sidebar=beach-list]").removeClass("folded");
-    $("[beach-toggle-icon=when-open]").show();
-    $("[beach-toggle-icon=when-closed]").hide();
   }
 
   function closeBeachListSidebar() {
     window.scrollTo({ top: 0, behavior: "instant" });
     $("[sidebar-toggle=beach-list]").addClass("folded");
     $("[sidebar=beach-list]").addClass("folded");
-    $("[beach-toggle-icon=when-open]").hide();
-    $("[beach-toggle-icon=when-closed]").show();
   }
 
   function openBeachSidebar(name) {
     window.scrollTo({ top: 0, behavior: "instant" });
-    if (window.innerWidth <= 479) {
-      $("[sidebar=beach-list]").css({
-        transition: "none",
-        transform: "translateX(-100%)",
-      });
-    }
     $("[sidebar=beach]").show();
     $("[sidebar=" + name + "]").show();
     $("[sidebar=" + name + "]")
@@ -362,7 +348,7 @@ export function map() {
     closeBeachListSidebar();
     closeBeachSidebar();
     //this excludes the home sidebar from being hidden (causes issues with the image notch animation on the sliders otherwise)
-    $("[beach-item=container]").hide();
+    /* $("[beach-item=container]").hide(); */
   }
 
   function resetMapPosition() {
