@@ -3,6 +3,8 @@ import { map } from "./modules/map.js";
 import { NotchPath } from "./modules/notch.js";
 import { Slider } from "./modules/slider.js";
 
+console.log("Salty v2.3 - Testing Vercel deployment");
+
 const devmode = localStorage.getItem("devMode") === "true";
 if (devmode) {
   customConsoleLog("Salty");
