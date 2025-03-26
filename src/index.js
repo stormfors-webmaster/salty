@@ -23,7 +23,7 @@ if (homepage) {
 }
 
 if (store) {
-  initStore();
+  console.log("sliders disabled");
 }
 
 function notch() {

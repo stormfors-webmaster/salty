@@ -7,8 +7,9 @@ export function map() {
     "mapbox://styles/felixhellstrom/cm7x0dpvq011w01sm5bdzap1c?optimize=true";
   let standardMap = "mapbox://styles/cv-mapbox/cm5zh2w0i002g01sfdcrs6dgj";
 
-  let mapDefaultZoom = 3;
-  let mapStartPosition = [-144.81125912, 33.6893667];
+  let mapDefaultZoom = 6.042708567826556;
+  let desktopStartPosition = [-123.046253, 33.837038];
+  let mobileStartPosition = [-118.3628729, 33.900661];
   let mapStartPitch = 0;
 
   //mapbox://styles/cv-mapbox/cm5zgyf7a002m01sgf936d3u6
@@ -19,7 +20,8 @@ export function map() {
     style: sateliteMap,
     projection: "globe",
     zoom: mapDefaultZoom,
-    center: mapStartPosition,
+    center:
+      window.innerWidth <= 991 ? mobileStartPosition : desktopStartPosition,
     pitch: mapStartPitch,
   });
 
@@ -353,7 +355,8 @@ export function map() {
 
   function resetMapPosition() {
     map.flyTo({
-      center: mapStartPosition,
+      center:
+        window.innerWidth <= 991 ? mobileStartPosition : desktopStartPosition,
       zoom: mapDefaultZoom,
       pitch: mapStartPitch,
     });
