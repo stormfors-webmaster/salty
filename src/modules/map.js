@@ -1,11 +1,12 @@
 export function map() {
   console.log("map.js module loaded");
   const mapboxToken =
-    "pk.eyJ1IjoiZmVsaXhoZWxsc3Ryb20iLCJhIjoiY20zaXhucjcwMDVwdTJqcG83ZjMxemJlciJ9._TipZd1k8nMEslWbCDg6Eg";
+    "pk.eyJ1Ijoid2VhcmVzYWx0eSIsImEiOiJjbThwMjd5YTkwNnpwMmtvZG9nYzI4dHNwIn0.dnXq6AxHz2OIrHsRYN_d0g";
 
   let sateliteMap =
-    "mapbox://styles/felixhellstrom/cm7x0dpvq011w01sm5bdzap1c?optimize=true";
-  let standardMap = "mapbox://styles/cv-mapbox/cm5zh2w0i002g01sfdcrs6dgj";
+    "mapbox://styles/wearesalty/cm8qfnumn00dq01srh0p148qs?optimize=true";
+  let standardMap =
+    "mapbox://styles/wearesalty/cm8qg3lor00dc01snbvr00nra?optimize=true";
 
   let mapDefaultZoom = 6.042708567826556;
   let desktopStartPosition = [-123.046253, 33.837038];
@@ -119,7 +120,7 @@ export function map() {
       map.flyTo({
         center: [lng, lat],
         zoom: 18,
-        pitch: 75,
+        pitch: 0,
       });
       hideAllSidebars();
       openBeachListSidebar();
@@ -173,7 +174,7 @@ export function map() {
         map.flyTo({
           center: [lon, lat],
           zoom: 18,
-          pitch: 75,
+          pitch: 0,
         });
         openBeachSidebar(tempID);
       }
@@ -421,13 +422,11 @@ export function map() {
     // Define Material Icons mappings for different POI types
     const poiIconMappings = {
       lifeguard: "ef73", // "Support" icon for lifeguard
-      firstaid: "e3f3", // "local_hospital"
       firstaidstation: "e3f3", // "local_hospital"
-      toilet: "e05a", // "wc"
+      restroom: "e05a", // "wc"
       showers: "e547", // "shower"
       parking: "e54f", // "local_parking"
-      restaurant: "e56c", // "restaurant"
-      picnic: "ea48", // "park"
+      food: "e56c", // "restaurant"
       picnicarea: "ea48", // "park"
       camping: "e3fa", // "outdoor_grill"
       pier: "e568", // "directions_boat"
@@ -515,7 +514,7 @@ export function map() {
         map.flyTo({
           center: [lng, lat],
           zoom: 18,
-          pitch: 75,
+          pitch: 0,
         });
       });
     });

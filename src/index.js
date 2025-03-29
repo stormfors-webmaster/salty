@@ -11,7 +11,7 @@ if (devmode) {
 }
 
 console.log("active");
-const homepage = window.location.pathname === "/";
+const homepage = window.location.pathname === "/home";
 const store = window.location.pathname.includes("/store");
 
 if (!homepage && !store) {
@@ -19,7 +19,7 @@ if (!homepage && !store) {
 }
 
 if (homepage) {
-  initHomepage();
+  map();
 }
 
 if (store) {
