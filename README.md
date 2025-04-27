@@ -187,14 +187,28 @@ This will create a minified bundle in the `dist/` directory (e.g., `dist/bundle.
 
 ## Deployment
 
-### Purging CDN Cache
+### Development Deployment
 
-If you host the bundled script on a CDN like jsDelivr, remember to purge the cache after updating the script to ensure users get the latest version. Refer to your CDN provider's documentation for specific instructions.
+The project is deployed using Vercel for development. The source files are served directly from:
+`https://salty-gamma.vercel.app/src/index.js`
 
-```bash
-# Example: Purge jsDelivr cache (replace with your actual URL)
-# curl https://purge.jsdelivr.net/gh/your-username/your-repo@latest/dist/bundle.js
-```
+Features:
+
+- Direct access to source files (no build step needed)
+- Instant updates on new deployments
+- No caching issues during development
+- Automatic deployments from main branch
+- ES modules support
+
+To use in development:
+
+1. Push changes to main branch
+2. Changes are immediately available at the deployment URL
+3. No build step required
+
+### Production Deployment
+
+For production, the files will be built and hosted in Webflow.
 
 ## Mapbox Configuration
 

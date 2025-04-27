@@ -1,6 +1,8 @@
 import { customConsoleLog } from "./utils/devmode.js";
 import { map } from "./modules/map.js";
 
+console.log("Salty v2.3 - Testing Vercel deployment");
+
 const devmode = localStorage.getItem("devMode") === "true";
 if (devmode) {
   customConsoleLog("Salty");
@@ -17,11 +19,11 @@ if (!homepage && !store) {
 }
 
 if (homepage) {
-  initHomepage();
+  map();
 }
 
 if (store) {
-  initStore();
+  console.log("sliders disabled");
 }
 
 async function initHomepage() {
