@@ -1,81 +1,118 @@
+/**
+ * Configuration for the Mapbox map.
+ */
+const mapConfig = {
+  mapboxToken:
+    "pk.eyJ1IjoiZmVsaXhoZWxsc3Ryb20iLCJhIjoiY20zaXhucjcwMDVwdTJqcG83ZjMxemJlciJ9._TipZd1k8nMEslWbCDg6Eg",
+  satelliteStyle:
+    "mapbox://styles/felixhellstrom/cm7x0dpvq011w01sm5bdzap1c?optimize=true",
+  standardStyle: "mapbox://styles/cv-mapbox/cm5zh2w0i002g01sfdcrs6dgj", // Currently unused, but kept for reference
+  defaultZoom: 3,
+  startPosition: [-144.81125912, 33.6893667], // LngLat array
+  startPitch: 0,
+  flyToZoom: 18, // Zoom level when flying to a marker
+  flyToPitch: 75, // Pitch level when flying to a marker
+  poiMinZoom: 15, // Minimum zoom level to show POI markers
+  // Material Icons hex codes for POI markers
+  poiIconMappings: {
+    default: "e55f", // place
+    lifeguard: "ef73", // support
+    firstaid: "e3f3", // local_hospital
+    firstaidstation: "e3f3", // local_hospital
+    toilet: "e05a", // wc
+    showers: "e547", // shower
+    parking: "e54f", // local_parking
+    restaurant: "e56c", // restaurant
+    picnic: "ea48", // park
+    picnicarea: "ea48", // park
+    camping: "e3fa", // outdoor_grill
+    pier: "e568", // directions_boat
+  },
+};
+
+const devmode = localStorage.getItem("devMode") === "true";
+
+/**
+ * Initializes and manages the Mapbox map functionality.
+ */
 export function map() {
-  console.log("map.js module loaded");
-  const mapboxToken =
-    "pk.eyJ1IjoiZmVsaXhoZWxsc3Ryb20iLCJhIjoiY20zaXhucjcwMDVwdTJqcG83ZjMxemJlciJ9._TipZd1k8nMEslWbCDg6Eg";
+  if (devmode) {
+    console.log("map.js: Module loaded");
+  }
 
-  let sateliteMap =
-    "mapbox://styles/felixhellstrom/cm7x0dpvq011w01sm5bdzap1c?optimize=true";
-  let standardMap = "mapbox://styles/cv-mapbox/cm5zh2w0i002g01sfdcrs6dgj";
+  mapboxgl.accessToken = mapConfig.mapboxToken;
 
-  let mapDefaultZoom = 3;
-  let mapStartPosition = [-144.81125912, 33.6893667];
-  let mapStartPitch = 0;
-
-  //mapbox://styles/cv-mapbox/cm5zgyf7a002m01sgf936d3u6
-  //mapbox://styles/mapbox/outdoors-v12
-  mapboxgl.accessToken = mapboxToken;
   const map = new mapboxgl.Map({
-    container: "map",
-    style: sateliteMap,
+    container: "map", // HTML element ID to render the map
+    style: mapConfig.satelliteStyle,
     projection: "globe",
-    zoom: mapDefaultZoom,
-    center: mapStartPosition,
-    pitch: mapStartPitch,
+    zoom: mapConfig.defaultZoom,
+    center: mapConfig.startPosition,
+    pitch: mapConfig.startPitch,
   });
 
+  // Add map controls
   map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
-
   map.addControl(
     new mapboxgl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true,
-      },
+      positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
       showUserHeading: true,
     }),
     "bottom-right"
   );
 
-  window.dev = {
-    openHome: openHomeSidebar,
-    closeHome: closeHomeSidebar,
-    openBeachList: openBeachListSidebar,
-    closeBeachList: closeBeachListSidebar,
-    openBeach: openBeachSidebar,
-    closeBeach: closeBeachSidebar,
-    openShop: openShopPage,
-  };
+  // Store markers for beaches and POIs
+  const markers = new Map(); // Beach markers: { id -> Mapbox GL Marker }
+  const poiMarkers = new Map(); // POI markers: { id -> Mapbox GL Marker }
 
-  const markers = new Map(); // Store markers with their IDs
-  const poiMarkers = new Map(); // Store POI markers separately
-
-  init();
-
-  async function init() {
+  /**
+   * Initializes map features after the map loads.
+   */
+  function init() {
     addClickEvents();
     setBeachMarkersFromHTML();
     setupPOIMarkers();
 
+    // Check for 'beaches' query parameter to potentially open a sidebar
     if (window.location.search.includes("beaches")) {
-      console.log("beaches query found");
-      closeHomeSidebar();
-      openBeachListSidebar();
-      window.history.pushState({}, "", window.location.pathname);
+      if (devmode) {
+        console.log("map.js: 'beaches' query found");
+      }
+      // Example: Assume functions exist to control sidebars
+      // closeHomeSidebar(); // Hypothetical function
+      // openBeachListSidebar(); // Hypothetical function
+      window.history.pushState({}, "", window.location.pathname); // Clean URL
     }
 
+    // Hide controls on smaller screens (replaces jQuery)
     if (window.innerWidth <= 991) {
-      $(".mapboxgl-ctrl-bottom-right").hide();
+      const controls = document.querySelector(".mapboxgl-ctrl-bottom-right");
+      if (controls) {
+        controls.style.display = "none";
+      }
     }
-    logMapCoordinates();
+
+    // Enable coordinate logging if in dev mode
+    if (devmode) {
+      logMapCoordinates();
+    }
   }
 
+  /**
+   * Sets up beach markers based on data embedded in the HTML.
+   * Expects elements with [temp-data="beach"] attribute and specific
+   * data attributes (temp-id, lat, lon, popup-text) and a child
+   * element .beach-image-url-data[src].
+   */
   function setBeachMarkersFromHTML() {
-    let beachElements = document.querySelectorAll("[temp-data=beach]");
+    let beachElements = document.querySelectorAll('[temp-data="beach"]');
     beachElements.forEach((element) => {
       let id = element.getAttribute("temp-id");
       let lat = parseFloat(element.getAttribute("lat"));
       let lon = parseFloat(element.getAttribute("lon"));
       if (
+        !id ||
         isNaN(lat) ||
         isNaN(lon) ||
         lat < -90 ||
@@ -84,365 +121,237 @@ export function map() {
         lon > 180
       ) {
         console.warn(
-          `Invalid coordinates for beach ${id}: lat=${lat}, lon=${lon}`
+          `map.js: Invalid data for beach element. ID: ${id}, Lat: ${lat}, Lon: ${lon}`
         );
-        return;
+        return; // Skip this marker
       }
       let coordinates = [lon, lat];
-      let popuptext = element.getAttribute("popup-text");
-      createMarker(coordinates, popuptext, id);
+      let popuptext = element.getAttribute("popup-text") || `Beach ${id}`; // Default text
+
+      // Selector for the image URL, using a class for robustness
+      const imageElement = element.querySelector(".beach-image-url-data");
+      const imageUrl = imageElement?.getAttribute("src") || "";
+
+      createMarker(coordinates, popuptext, id, imageUrl);
     });
+    if (devmode) {
+      console.log(`map.js: Initialized ${markers.size} beach markers.`);
+    }
   }
 
-  function createMarker(coordinates, popupText, id) {
-    let popup = new mapboxgl.Popup({ offset: 25 }).setText(popupText);
+  /**
+   * Creates a single beach marker and adds it to the map.
+   * @param {Array<number>} coordinates - [longitude, latitude] array.
+   * @param {string} popupText - Text content for the popup.
+   * @param {string} id - Unique identifier for the marker (from temp-id).
+   * @param {string} imageUrl - URL for the image in the popup.
+   */
+  function createMarker(coordinates, popupText, id, imageUrl) {
+    // Create popup with HTML content including the image, making the container clickable
+    // Note: The onclick directly calls a querySelector. Ensure the modal element exists.
+    const popupHtml = `
+      <div class="popup-content" style="overflow: hidden; border-radius: 8px; cursor: pointer;" onclick="document.querySelector('[modal-id=\"${id}\"]')?.click()">
+        ${
+          imageUrl
+            ? `<img src="${imageUrl}" alt="${popupText}" class="popup-image" style="width: 100%; display: block;">`
+            : ""
+        }
+        <div class="popup-text" style="width: 100%; padding: 8px;">${popupText}</div>
+      </div>`;
 
-    let markerElementX = document.createElement("div");
-    markerElementX.className = "beach-marker";
-    markerElementX.id = id;
+    let popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml);
 
-    const marker = new mapboxgl.Marker(markerElementX)
+    // Create a DOM element for the marker
+    let markerElement = document.createElement("div");
+    markerElement.className = "beach-marker"; // CSS class for styling
+    markerElement.id = `beach-${id}`; // Unique ID for the marker element
+
+    const marker = new mapboxgl.Marker(markerElement)
       .setLngLat(coordinates)
       .setPopup(popup)
       .addTo(map);
 
-    // Store the marker reference
+    // Store the marker reference using its ID
     markers.set(id, marker);
 
+    // Add event listeners for popup open/close
     popup.on("open", () => {
-      let lng = popup.getLngLat().lng;
-      let lat = popup.getLngLat().lat;
-      console.log("popup opened");
-      console.log(id);
-      map.flyTo({
-        center: [lng, lat],
-        zoom: 18,
-        pitch: 75,
+      let lngLat = marker.getLngLat();
+      if (devmode) {
+        console.log(`map.js: Beach popup opened: ${id}`);
+      }
+      // Assumes sidebar elements exist
+      const homeSidebar = document.querySelector(".sidebar_home");
+      const beachListSidebar = document.querySelector(".sidebar_beach-list");
+      if (homeSidebar) homeSidebar.style.display = "none";
+      if (beachListSidebar) beachListSidebar.style.display = "block";
+
+      // Hide all modals, then show the relevant one
+      document.querySelectorAll("[modal-id]").forEach((modal) => {
+        modal.style.display = "none";
       });
-      hideAllSidebars();
-      openBeachListSidebar();
-      openBeachSidebar(id);
-      window.scrollTo({ top: 0, behavior: "instant" });
+      const targetModal = document.querySelector(`[modal-id="${id}"]`);
+      if (targetModal) {
+        targetModal.style.display = "block";
+      } else {
+        console.warn(`map.js: Modal with id "${id}" not found.`);
+      }
+
+      // Fly to the marker location
+      map.flyTo({
+        center: [lngLat.lng, lngLat.lat],
+        zoom: mapConfig.flyToZoom,
+        pitch: mapConfig.flyToPitch,
+      });
+      window.scrollTo({ top: 0, behavior: "instant" }); // Scroll page to top
     });
 
     popup.on("close", () => {
-      console.log("popup closed");
-      console.log(id);
-      window.scrollTo({ top: 0, behavior: "instant" });
+      if (devmode) {
+        console.log(`map.js: Beach popup closed: ${id}`);
+      }
+      window.scrollTo({ top: 0, behavior: "instant" }); // Ensure page is scrolled top
     });
   }
 
+  /**
+   * Adds global click event listeners for map-related interactions.
+   * Specifically listens for clicks on elements with [map-link="item"].
+   */
   function addClickEvents() {
     document.addEventListener("click", (e) => {
-      //open home sidebar
-      /* if (e.target.matches("[open-sidebar=home], [open-sidebar=home] *")) {
-        e.preventDefault();
-        hideAllSidebars();
-        openHomeSidebar();
-        resetMapPosition();
-      } */
-      //click on beach list buttons
-      /* if (
-        e.target.matches(
-          "[open-sidebar=beach-list], [open-sidebar=beach-list] *"
-        )
-      ) {
-        e.preventDefault();
-        hideAllSidebars();
-        if (window.innerWidth > 479) {
-          openBeachListSidebar();
-        }
-        if (window.innerWidth <= 991) {
-          expandMap();
-        }
-        if (window.innerWidth <= 479) {
-          openBeachListSidebar();
-        }
-      } */
-      //click on beach list item
-      if (e.target.matches("[map-link=item], [map-link=item] *")) {
-        const target = e.target.matches("[map-link=item]")
-          ? e.target
-          : e.target.closest("[map-link=item]");
-        let lat = target.getAttribute("lat");
-        let lon = target.getAttribute("lon");
-        let tempID = target.getAttribute("temp-id");
-        toggleMarkerPopup(tempID);
-        map.flyTo({
-          center: [lon, lat],
-          zoom: 18,
-          pitch: 75,
-        });
-        openBeachSidebar(tempID);
-      }
-      if (
-        e.target.matches(
-          ".modal_close-button, .modal_close-button *, .mobile-back, .mobile-back *"
-        )
-      ) {
-        closeBeachSidebar();
-      }
+      // Check if the click target or its parent has the map-link attribute
+      const mapLinkTarget = e.target.closest('[map-link="item"]');
+      if (mapLinkTarget) {
+        let lat = parseFloat(mapLinkTarget.getAttribute("lat"));
+        let lon = parseFloat(mapLinkTarget.getAttribute("lon"));
+        let tempID = mapLinkTarget.getAttribute("temp-id");
 
-      if (e.target.matches("[close-sidebar=beach]")) {
-        closeAllPopups();
-        openBeachListSidebar();
+        if (tempID && !isNaN(lat) && !isNaN(lon)) {
+          if (devmode) {
+            console.log(`map.js: Map link clicked for ID: ${tempID}`);
+          }
+          toggleMarkerPopup(tempID); // Open or close the popup for this marker
+          map.flyTo({
+            center: [lon, lat],
+            zoom: mapConfig.flyToZoom,
+            pitch: mapConfig.flyToPitch,
+          });
+        } else {
+          console.warn(
+            `map.js: Invalid data on map-link item. ID: ${tempID}, Lat: ${lat}, Lon: ${lon}`
+          );
+        }
       }
-
-      /* if (e.target.matches("[map-function=expand]")) {
-        expandMap();
-        setTimeout(() => {
-          $("[sidebar-toggle=beach-list]").show();
-          $(".mapboxgl-ctrl-bottom-right").show();
-        }, 1000);
-      } */
-      /*  if (
-        e.target.matches("[map-function=collapse] *, [map-function=collapse]")
-      ) {
-        collapseMap();
-        $("[sidebar=beach-list]").css({
-          transform: "translateX(-100%)",
-          transition: "none",
-        });
-        $("[sidebar=home]").css({
-          transform: "translateX(0%)",
-          transition: "none",
-        });
-        $("[sidebar-toggle=beach-list]").hide();
-        $(".mapboxgl-ctrl-bottom-right").hide();
-      } */
-      /* if (e.target.matches("[toggle-sidebar=home]")) {
-        toggleHomeSidebar();
-      }
-      if (e.target.matches("[toggle-sidebar=beach-list]")) {
-        toggleBeachListSidebar();
-      } */
-      //mobile beach close button
-      /* if (e.target.matches(".mob-beach-top-inner, .mob-beach-top-inner *")) {
-        console.log("mob-beach-top-inner clicked");
-        closeBeachSidebar();
-        openBeachListSidebar();
-      } */
-      if (e.target.matches("[stormfors-sort=reverse]")) {
-        const beachList = document.querySelector(".beach-list_list");
-        const beachItems = [...beachList.children];
-        beachItems.reverse();
-        beachItems.forEach((item) => beachList.appendChild(item));
-      }
-      //end of click events
     });
   }
 
-  function toggleHomeSidebar() {
-    let open = $("[sidebar-toggle=home]").hasClass("folded");
-    if (open) {
-      openHomeSidebar();
-    } else {
-      closeHomeSidebar();
-    }
-  }
-
-  function toggleBeachListSidebar() {
-    let open = $("[sidebar-toggle=beach-list]").hasClass("folded");
-    if (open) {
-      openBeachListSidebar();
-    } else {
-      closeBeachListSidebar();
-      closeBeachSidebar();
-    }
-  }
-
-  function expandMap() {
-    $("[map-function=expand]").hide();
-    $("[map-function=container]").addClass("expanded");
-    for (let i = 0; i < 100; i++) {
-      setTimeout(() => {
-        map.resize();
-      }, i * 10);
-    }
-    //extra resize to fix map position visual bug
-    map.resize();
-    setTimeout(() => {
-      map.resize();
-      $("[map-function=collapse]").show();
-    }, 1000);
-  }
-
-  function collapseMap() {
-    $("[map-function=collapse]").hide();
-    $("[map-function=container]").removeClass("expanded");
-    for (let i = 0; i < 100; i++) {
-      setTimeout(() => {
-        map.resize();
-      }, i * 10);
-    }
-    setTimeout(() => {
-      $("[map-function=expand]").show();
-    }, 1000);
-  }
-
-  function openShopPage() {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    $("[page=shop]").removeClass("hide");
-  }
-
-  function closeShopPage() {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    $("[page=shop]").addClass("hide");
-  }
-
-  function openHomeSidebar() {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    $("[sidebar=home]").show();
-    $("[sidebar-toggle=home]").show();
-    setTimeout(() => {
-      $("[map-function=expand]").show();
-    }, 500);
-  }
-
-  function closeHomeSidebar() {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    $("[sidebar=home]").hide();
-    $("[sidebar-toggle=home]").hide();
-  }
-
-  function openBeachListSidebar() {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    if (window.innerWidth <= 479) {
-      $("[sidebar=beach-list]").css({
-        transition: "none",
-        transform: "translateX(0%)",
-      });
-    }
-    $("[sidebar-toggle=beach-list]").removeClass("folded");
-    $("[sidebar=beach-list]").removeClass("folded");
-  }
-
-  function closeBeachListSidebar() {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    $("[sidebar-toggle=beach-list]").addClass("folded");
-    $("[sidebar=beach-list]").addClass("folded");
-  }
-
-  function openBeachSidebar(name) {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    $("[sidebar=beach]").show();
-    $("[sidebar=" + name + "]").show();
-    $("[sidebar=" + name + "]")
-      .parent()
-      .show();
-  }
-
-  function closeBeachSidebar(name) {
-    window.scrollTo({ top: 0, behavior: "instant" });
-    $("[sidebar=beach]").hide();
-    $("[sidebar=" + name + "]").hide();
-    $("[sidebar=" + name + "]")
-      .parent()
-      .hide();
-  }
-
-  function hideAllSidebars() {
-    window.history.pushState({}, "", window.location.pathname);
-    window.scrollTo({ top: 0, behavior: "instant" });
-    closeHomeSidebar();
-    closeBeachListSidebar();
-    closeBeachSidebar();
-    //this excludes the home sidebar from being hidden (causes issues with the image notch animation on the sliders otherwise)
-    /* $("[beach-item=container]").hide(); */
-  }
-
+  /**
+   * Resets the map to its initial position, zoom, and pitch.
+   */
   function resetMapPosition() {
+    if (devmode) {
+      console.log("map.js: Resetting map position.");
+    }
     map.flyTo({
-      center: mapStartPosition,
-      zoom: mapDefaultZoom,
-      pitch: mapStartPitch,
+      center: mapConfig.startPosition,
+      zoom: mapConfig.defaultZoom,
+      pitch: mapConfig.startPitch,
     });
   }
 
-  function getMapCenter() {
-    // Get the map's center coordinates
+  /**
+   * Logs the map's current center, zoom, and pitch. (Dev Mode Only)
+   */
+  function logMapState() {
     const center = map.getCenter();
-    console.log(`Map center: ${center.lng}, ${center.lat}`);
-  }
-
-  function getMapZoomLevel() {
     const zoom = map.getZoom();
-    console.log(`Map zoom level: ${zoom}`);
-  }
-
-  function getMapPitch() {
     const pitch = map.getPitch();
-    console.log(`Map pitch: ${pitch}`);
+    console.log(
+      `map.js (Dev): Center=${center.lng.toFixed(4)}, ${center.lat.toFixed(
+        4
+      )} | Zoom=${zoom.toFixed(2)} | Pitch=${pitch.toFixed(2)}`
+    );
   }
 
+  /**
+   * Sets up map event listeners for logging coordinates and state changes. (Dev Mode Only)
+   */
   function logMapCoordinates() {
-    // Log center whenever map moves
-    map.on("moveend", () => {
-      getMapCenter();
-      getMapZoomLevel();
-      getMapPitch();
-    });
+    console.log("map.js (Dev): Initializing map state logging.");
+    // Log state whenever map movement ends
+    map.on("moveend", logMapState);
 
-    // Log current coordinates to console on mouse click
+    // Log clicked coordinates
     map.on("click", (e) => {
-      console.log(`${e.lngLat.lng}, ${e.lngLat.lat}`);
-      console.log(e);
-
-      /* if (e.target.matches(".beach-marker")) {
-                  console.log("beach-marker clicked");
-                  console.log(e.target.id);
-                } */
+      console.log(
+        `map.js (Dev): Clicked at Lng: ${e.lngLat.lng}, Lat: ${e.lngLat.lat}`
+      );
+      // console.log(e); // Keep commented unless deep debugging needed
     });
+
+    // Initial log
+    logMapState();
   }
 
-  // Example of how to toggle a specific marker's popup
+  /**
+   * Toggles the popup visibility for a specific beach marker.
+   * @param {string} id - The ID of the marker whose popup should be toggled.
+   */
   function toggleMarkerPopup(id) {
     const marker = markers.get(id);
     if (marker) {
       marker.togglePopup();
+      if (devmode) {
+        console.log(`map.js: Toggled popup for beach marker ID: ${id}`);
+      }
+    } else {
+      console.warn(`map.js: Marker with ID ${id} not found for popup toggle.`);
     }
   }
 
+  /**
+   * Closes all currently open beach marker popups.
+   */
   function closeAllPopups() {
+    let closedCount = 0;
     markers.forEach((marker) => {
       const popup = marker.getPopup();
       if (popup.isOpen()) {
         popup.remove();
+        closedCount++;
       }
     });
+    if (devmode && closedCount > 0) {
+      console.log(`map.js: Closed ${closedCount} beach popups.`);
+    }
   }
 
+  /**
+   * Sets up POI (Point of Interest) markers based on HTML data.
+   * Expects elements with [temp-data="poi"] and attributes like
+   * temp-id, lat, lon, marker-type, and popup-text or name.
+   */
   function setupPOIMarkers() {
-    console.log("Setting up POI markers...");
-
-    // Define Material Icons mappings for different POI types
-    const poiIconMappings = {
-      lifeguard: "ef73", // "Support" icon for lifeguard
-      firstaid: "e3f3", // "local_hospital"
-      firstaidstation: "e3f3", // "local_hospital"
-      toilet: "e05a", // "wc"
-      showers: "e547", // "shower"
-      parking: "e54f", // "local_parking"
-      restaurant: "e56c", // "restaurant"
-      picnic: "ea48", // "park"
-      picnicarea: "ea48", // "park"
-      camping: "e3fa", // "outdoor_grill"
-      pier: "e568", // "directions_boat"
-    };
+    if (devmode) {
+      console.log("map.js: Setting up POI markers...");
+    }
 
     // Find all POI elements in the DOM
-    let poiElements = document.querySelectorAll("[temp-data=poi]");
-    console.log(`Found ${poiElements.length} POI elements in the DOM`);
+    let poiElements = document.querySelectorAll('[temp-data="poi"]');
 
     poiElements.forEach((element) => {
       let id = element.getAttribute("temp-id");
       let lat = parseFloat(element.getAttribute("lat"));
       let lon = parseFloat(element.getAttribute("lon"));
-      // Get the POI type for custom icon from marker-type attribute
-      let markerType = element.getAttribute("marker-type") || "default";
+      // Get the POI type for custom icon; default to 'default' if missing
+      let markerType = (element.getAttribute("marker-type") || "default")
+        .toLowerCase()
+        .replace(/\s+/g, ""); // Normalize type for lookup
 
-      // Validate coordinates
+      // Validate data
       if (
+        !id ||
         isNaN(lat) ||
         isNaN(lon) ||
         lat < -90 ||
@@ -451,52 +360,47 @@ export function map() {
         lon > 180
       ) {
         console.warn(
-          `Invalid coordinates for POI ${id}: lat=${lat}, lon=${lon}`
+          `map.js: Invalid data for POI element. ID: ${id}, Lat: ${lat}, Lon: ${lon}, Type: ${markerType}`
         );
-        return;
+        return; // Skip this POI
       }
 
       let coordinates = [lon, lat];
       let popupText =
         element.getAttribute("popup-text") ||
         element.getAttribute("name") ||
-        `POI ${id}`;
+        `POI ${id}`; // Default text
 
-      console.log(
-        `Creating POI marker: ${id} at [${lon}, ${lat}] with text: ${popupText}, type: ${markerType}`
-      );
+      if (devmode) {
+        console.log(
+          `map.js: Processing POI - ID: ${id}, Coords: [${lon}, ${lat}], Type: ${markerType}`
+        );
+      }
 
       // Create marker element with appropriate styling
       let markerElement = document.createElement("div");
+      markerElement.className = "beach-marker poi-marker"; // Base classes
 
-      // Add base classes for all POI markers
-      markerElement.className = "beach-marker poi-marker";
+      // Add type-specific class
+      markerElement.classList.add(`marker-type-${markerType}`);
 
-      // Format marker type for class name (replace spaces with hyphens)
-      const cssClassName = markerType.toLowerCase().replace(/\s+/g, "-");
-      markerElement.classList.add(`marker-type-${cssClassName}`);
-
-      // Create icon element using Material Icons
-      const lowerMarkerType = markerType.toLowerCase();
-      const iconKey = lowerMarkerType.replace(/\s+/g, ""); // Remove spaces for object lookup
-      const iconCode = poiIconMappings[iconKey] || "e55f"; // "place" is default marker
-
-      // Create the icon element using Material Icons font
+      // Create icon using Material Icons font
+      const iconCode =
+        mapConfig.poiIconMappings[markerType] ||
+        mapConfig.poiIconMappings.default;
       const iconSpan = document.createElement("span");
       iconSpan.className = "material-icons poi-icon";
-      iconSpan.innerHTML = `&#x${iconCode};`; // Use the hex code point
+      iconSpan.innerHTML = `&#x${iconCode};`; // Set icon using hex code
 
-      // Add icon to marker element
       markerElement.appendChild(iconSpan);
-
-      markerElement.id = `poi-${id}`;
+      markerElement.id = `poi-${id}`; // Unique ID for the POI marker element
 
       // Create the popup
       let popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-        `<div>${popupText}</div>`
+        `<div class="poi-popup-text">${popupText}</div>` // Added class for potential styling
       );
 
-      // Create the marker but don't add to map yet
+      // Create the marker instance but *don't* add to map yet
       const marker = new mapboxgl.Marker(markerElement)
         .setLngLat(coordinates)
         .setPopup(popup);
@@ -504,71 +408,123 @@ export function map() {
       // Store in POI markers collection
       poiMarkers.set(id, marker);
 
-      // Setup popup events (similar to beach markers)
+      // Setup popup open event (optional behavior, like flying)
       popup.on("open", () => {
-        let lng = popup.getLngLat().lng;
-        let lat = popup.getLngLat().lat;
-        console.log(`POI popup opened: ${id}`);
-        map.flyTo({
-          center: [lng, lat],
-          zoom: 18,
-          pitch: 75,
-        });
+        let lngLat = marker.getLngLat();
+        if (devmode) {
+          console.log(`map.js: POI popup opened: ${id}`);
+        }
+        // Optional: Fly to POI on popup open
+        /* map.flyTo({
+          center: [lngLat.lng, lngLat.lat],
+          zoom: mapConfig.flyToZoom,
+          pitch: mapConfig.flyToPitch,
+        }); */
       });
     });
+    if (devmode) {
+      console.log(
+        `map.js: Processed ${poiElements.length} POI elements, created ${poiMarkers.size} POI markers.`
+      );
+    }
 
-    // Update POI marker visibility based on zoom level
+    // Set initial visibility based on zoom
     updatePOIVisibility();
 
-    // Add zoom change listener
+    // Add listener to update visibility on zoom changes
     map.on("zoom", updatePOIVisibility);
   }
 
+  /**
+   * Updates the visibility of POI markers based on the current map zoom level.
+   * Shows markers at or above `mapConfig.poiMinZoom`, hides them below.
+   */
   function updatePOIVisibility() {
     const currentZoom = map.getZoom();
-    console.log(`Current zoom level: ${currentZoom}`);
+    if (devmode) {
+      // console.log(`map.js: Checking POI visibility at zoom: ${currentZoom.toFixed(2)}`); // Can be noisy
+    }
 
     poiMarkers.forEach((marker, id) => {
-      if (currentZoom >= 15) {
+      const element = marker.getElement();
+      const isOnMap = !!element.parentNode; // Check if the marker element is currently in the DOM
+
+      if (currentZoom >= mapConfig.poiMinZoom) {
         // Show marker if it's not already on the map
-        if (!marker.getElement().parentNode) {
-          console.log(`Adding POI marker: ${id} at zoom level ${currentZoom}`);
+        if (!isOnMap) {
+          if (devmode) {
+            console.log(
+              `map.js: Adding POI marker ${id} (Zoom >= ${mapConfig.poiMinZoom})`
+            );
+          }
           marker.addTo(map);
         }
       } else {
-        // Remove marker if it's on the map
-        if (marker.getElement().parentNode) {
-          console.log(
-            `Removing POI marker: ${id} at zoom level ${currentZoom}`
-          );
+        // Remove marker if it's currently on the map
+        if (isOnMap) {
+          if (devmode) {
+            console.log(
+              `map.js: Removing POI marker ${id} (Zoom < ${mapConfig.poiMinZoom})`
+            );
+          }
           marker.remove();
         }
       }
     });
   }
 
-  // Toggle a specific POI marker's popup
+  /**
+   * Toggles the popup visibility for a specific POI marker.
+   * @param {string} id - The ID of the POI marker.
+   */
   function togglePOIPopup(id) {
     const marker = poiMarkers.get(id);
     if (marker) {
       marker.togglePopup();
+      if (devmode) {
+        console.log(`map.js: Toggled popup for POI marker ID: ${id}`);
+      }
+    } else {
+      console.warn(
+        `map.js: POI marker with ID ${id} not found for popup toggle.`
+      );
     }
   }
 
-  // Show/hide all POI markers (regardless of zoom level)
+  // --- Functions for explicitly controlling POI visibility (optional) ---
+
+  /**
+   * Forces all POI markers to be added to the map, regardless of zoom level.
+   */
   function showAllPOIMarkers() {
-    poiMarkers.forEach((marker) => {
+    let addedCount = 0;
+    poiMarkers.forEach((marker, id) => {
       if (!marker.getElement().parentNode) {
         marker.addTo(map);
+        addedCount++;
       }
     });
+    if (devmode && addedCount > 0) {
+      console.log(`map.js: Force-showed ${addedCount} POI markers.`);
+    }
   }
 
+  /**
+   * Removes all POI markers from the map.
+   */
   function hideAllPOIMarkers() {
-    poiMarkers.forEach((marker) => {
+    let removedCount = 0;
+    poiMarkers.forEach((marker, id) => {
       if (marker.getElement().parentNode) {
         marker.remove();
+        removedCount++;
       }
     });
+    if (devmode && removedCount > 0) {
+      console.log(`map.js: Force-hid ${removedCount} POI markers.`);
+    }
   }
+
+  // Initialize the map functionality after the Mapbox map instance is ready.
+  map.on("load", init);
 }
