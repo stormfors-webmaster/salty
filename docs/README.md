@@ -1,5 +1,12 @@
 # Salty Beaches - JavaScript Module Documentation
 
+## Q4 2024 Refactoring Initiative
+
+### 📋 Strategic Documents
+
+- **[Q4 Refactoring Strategy](./Q4-REFACTORING-STRATEGY.md)** - Comprehensive technical refactoring plan addressing core architectural improvements
+- **[Q4 Executive Summary](./Q4-REFACTORING-EXECUTIVE-SUMMARY.md)** - High-level summary for stakeholder buy-in
+
 ## Overview
 
 This directory contains comprehensive documentation for all JavaScript modules in the Salty Beaches application. Each module is documented with detailed API references, usage examples, integration patterns, and best practices.
@@ -9,15 +16,18 @@ This directory contains comprehensive documentation for all JavaScript modules i
 ### Core Application Modules
 
 #### [ActionController](./actionController.md)
+
 Central orchestrator for executing predefined action sequences based on user interactions.
 
 **Key Features:**
+
 - Configuration-driven action execution
 - EventBus integration for module coordination
 - Conditional action support for responsive behavior
 - Comprehensive action type library
 
 **Use Cases:**
+
 - User interaction handling
 - Complex action sequencing
 - Responsive behavior management
@@ -26,15 +36,18 @@ Central orchestrator for executing predefined action sequences based on user int
 ---
 
 #### [AppState](./appState.md)
+
 Redux-like state management system serving as the single source of truth for the application.
 
 **Key Features:**
+
 - Centralized state management
 - Pure reducer functions
 - Event-driven updates
 - Efficient caching with Maps
 
 **Use Cases:**
+
 - Global state management
 - Data caching and retrieval
 - Reactive UI updates
@@ -43,15 +56,18 @@ Redux-like state management system serving as the single source of truth for the
 ---
 
 #### [MapController](./mapController.md)
+
 Comprehensive map management system handling Mapbox GL JS interactions and rendering.
 
 **Key Features:**
+
 - Interactive map initialization
 - Feature interaction handling
 - Popup management
 - Dynamic content updates
 
 **Use Cases:**
+
 - Map visualization
 - User interactions with geographic features
 - Location-based services
@@ -60,15 +76,18 @@ Comprehensive map management system handling Mapbox GL JS interactions and rende
 ---
 
 #### [UIController](./uiController.md)
+
 Coordinator for all user interface interactions and DOM management.
 
 **Key Features:**
+
 - DOM element caching
 - Action-driven event system
 - Responsive design management
 - Module coordination
 
 **Use Cases:**
+
 - UI state management
 - DOM manipulation coordination
 - Responsive layout handling
@@ -77,15 +96,18 @@ Coordinator for all user interface interactions and DOM management.
 ---
 
 #### [EventBus](./eventBus.md)
+
 Simple but powerful Pub/Sub event system enabling loose coupling between modules.
 
 **Key Features:**
+
 - Synchronous event delivery
 - Subscription management
 - Built-in error isolation
 - Comprehensive logging
 
 **Use Cases:**
+
 - Module communication
 - Event-driven architecture
 - Decoupled system design
@@ -96,15 +118,18 @@ Simple but powerful Pub/Sub event system enabling loose coupling between modules
 ### Data Management Modules
 
 #### [DataController](./dataController.md)
+
 Central data management layer handling fetching, caching, and pre-loading operations.
 
 **Key Features:**
+
 - Pre-loading strategy
 - Centralized caching
 - Error resilience
 - Performance optimization
 
 **Use Cases:**
+
 - Data pre-fetching
 - Cache management
 - API integration
@@ -113,15 +138,18 @@ Central data management layer handling fetching, caching, and pre-loading operat
 ---
 
 #### [MockAPI](./mockAPI.md)
+
 Development and testing utility providing simulated API responses.
 
 **Key Features:**
+
 - Realistic API simulation
 - Randomized test data
 - Network delay simulation
 - Error scenario testing
 
 **Use Cases:**
+
 - Development without backend
 - Unit testing
 - Integration testing
@@ -132,15 +160,18 @@ Development and testing utility providing simulated API responses.
 ### Utility Modules
 
 #### [Utils](./utils.md)
+
 Collection of utility functions for common operations throughout the application.
 
 **Key Features:**
+
 - Responsive design utilities
 - Performance utilities (debouncing)
 - DOM manipulation helpers
 - Data processing utilities
 
 **Use Cases:**
+
 - Responsive behavior
 - Performance optimization
 - DOM operations
@@ -151,15 +182,18 @@ Collection of utility functions for common operations throughout the application
 ### Configuration System
 
 #### [Config](./config.md)
+
 Central configuration system providing modular settings management.
 
 **Module Structure:**
+
 - `js/config/map.js` - Map settings and Mapbox configuration
 - `js/config/api.js` - API endpoints and service configuration
 - `js/config/actions.js` - Event action definitions and sequences
 - `js/config/ui.js` - UI selectors, settings, and feature configurations
 
 **Key Features:**
+
 - Modular configuration architecture
 - Environment-specific settings
 - Feature configuration
@@ -170,18 +204,22 @@ Central configuration system providing modular settings management.
 ### View Components
 
 #### FeatureListView
+
 Specialized module for rendering feature lists in the sidebar.
 
 **Features:**
+
 - Template-based rendering
 - Feature type handling
 - Data binding
 - Sorting and filtering
 
 #### DetailView
+
 Manages the detail sidebar for individual beach information display.
 
 **Features:**
+
 - Data binding and population
 - Weather data integration
 - Dynamic content rendering
@@ -190,9 +228,11 @@ Manages the detail sidebar for individual beach information display.
 ### Service Modules
 
 #### ResponsiveService
+
 Handles responsive design detection and viewport change management.
 
 **Features:**
+
 - Viewport detection
 - Responsive event publishing
 - Layout updates
@@ -261,6 +301,7 @@ Handles responsive design detection and viewport change management.
 ## API Quick Reference
 
 ### AppState
+
 ```javascript
 AppState.dispatch({ type: "ACTION_TYPE", payload: data });
 const state = AppState.getState();
@@ -268,17 +309,20 @@ const beach = AppState.getBeachById(id);
 ```
 
 ### EventBus
+
 ```javascript
 EventBus.subscribe("event:name", callback);
 EventBus.publish("event:name", data);
 ```
 
 ### ActionController
+
 ```javascript
 ActionController.execute("actionName", { context });
 ```
 
 ### MapController
+
 ```javascript
 await MapController.init();
 MapController.flyTo({ coordinates, zoom });
@@ -286,6 +330,7 @@ MapController.showPopup(feature, details);
 ```
 
 ### Utils
+
 ```javascript
 const isMobile = Utils.isMobileView();
 const debouncedFn = Utils.debounce(fn, delay);
@@ -295,6 +340,7 @@ Utils.updateElement({ element, value, type });
 ## Configuration Examples
 
 ### Adding a New Action
+
 ```javascript
 // js/config/actions.js
 newAction: {
@@ -308,31 +354,35 @@ newAction: {
 ```
 
 ### Adding UI Selectors
+
 ```javascript
 // js/config/ui.js
 selectorsConfig = {
-  NEW_ELEMENT: '[data-element="new"]'
+  NEW_ELEMENT: '[data-element="new"]',
 };
 ```
 
 ### Configuring Map Settings
+
 ```javascript
 // js/config/map.js
 export const mapConfig = {
   DEFAULT_ZOOM: 10,
-  MOBILE_START_POSITION: [-120, 35]
+  MOBILE_START_POSITION: [-120, 35],
 };
 ```
 
 ## Performance Considerations
 
 ### Optimization Strategies
+
 1. **Pre-loading**: Critical data loaded during initialization
 2. **Caching**: Frequently accessed data stored in Maps
 3. **Debouncing**: Expensive operations throttled with Utils.debounce
 4. **Event Delegation**: Single event listeners for multiple elements
 
 ### Memory Management
+
 1. **Cleanup Subscriptions**: Unsubscribe from EventBus when no longer needed
 2. **Cache Management**: Clear unnecessary cached data
 3. **DOM References**: Store DOM elements to avoid repeated queries
@@ -340,12 +390,14 @@ export const mapConfig = {
 ## Error Handling
 
 ### Error Patterns
+
 1. **Graceful Degradation**: Application continues with reduced functionality
 2. **User Feedback**: Clear error messages for users
 3. **Developer Logging**: Detailed error information for debugging
 4. **Fallback Strategies**: Alternative approaches when primary methods fail
 
 ### Common Error Scenarios
+
 1. **API Failures**: Handle network errors and timeouts
 2. **Missing DOM Elements**: Validate element existence before manipulation
 3. **Invalid Data**: Validate data before processing
@@ -354,18 +406,21 @@ export const mapConfig = {
 ## Extension Guidelines
 
 ### Adding New Modules
+
 1. Follow existing module patterns and conventions
 2. Use EventBus for communication with other modules
 3. Document public APIs and integration points
 4. Include error handling and edge case management
 
 ### Modifying Existing Modules
+
 1. Maintain backward compatibility when possible
 2. Update documentation for API changes
 3. Test integration with other modules
 4. Consider performance implications
 
 ### Configuration Changes
+
 1. Update relevant configuration files
 2. Document new configuration options
 3. Provide sensible defaults

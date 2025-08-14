@@ -1,6 +1,6 @@
 # Salty Beaches
 
-Salty Beaches is a modern, interactive web application designed to display geographical data with a focus on beaches. It is built to integrate seamlessly with a Webflow CMS backend, providing a powerful and flexible solution for dynamic, map-based content. The application features a responsive design, a modular architecture, and a highly configurable event-driven system for user interactions.
+Salty Beaches is a modern, interactive web application for exploring beaches and nearby points of interest (POIs). It integrates with a Webflow CMS backend and renders an interactive Mapbox map UI. The app features a responsive design, modular architecture, and an event-driven system for user interactions.
 
 ## Table of Contents
 
@@ -29,34 +29,39 @@ Salty Beaches is a modern, interactive web application designed to display geogr
 
 ## Tech Stack
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript (ES6+)
+- **Frontend**: HTML5, CSS, Vanilla JavaScript (ES modules)
 - **Mapping**: Mapbox GL JS
-- **Backend**: Node.js / Express
-- **CMS**: Webflow
-- **Local Development**: Vercel CLI (`vercel dev`)
-- **Dependencies**: `axios`, `cors`, `dotenv`, `express`, `node-fetch`, `@turf/turf`.
+- **Backend**: Serverless-style API routes in `/api` (run locally via Vercel CLI)
+- **CMS**: Webflow (v2 API)
+- **Local Development**: Vercel CLI (`vercel dev`) with `.env.local`
+- **Dependencies**: `@turf/turf`, `axios`, `cors`, `dotenv`, `express`, `node-fetch`, `dotenv-cli`
 
 ## Project Structure
 
 The project follows a modular structure, with a clear separation between the frontend application logic and the backend API handlers.
 
 ```
-salty-development-2/
+salty/
 ├── api/
-│   └── beaches.js          # Serverless function to fetch and transform data from Webflow
+│   ├── beaches.js              # Fetches & transforms Beaches collection from Webflow
+│   └── pois.js                 # Fetches & transforms POIs collection from Webflow
 ├── js/
-│   ├── appState.js             # Manages global application state
-│   ├── config.js               # Central configuration file
-│   ├── mapController.js        # Handles all Mapbox logic and interactions
-│   ├── uiController.js         # Manages all DOM manipulation and UI events
-│   ├── actionController.js     # Executes action sequences from the config
-│   ├── eventBus.js             # Simple Pub/Sub event bus for module communication
-│   └── utils.js                # General utility functions
-│
-├── index.js                    # Main application entry point
-├── server.js                   # Express server that emulates Vercel's routing for local dev
-├── vercel.json                 # Vercel deployment configuration
-├── .env.local.example          # Example environment variables file
+│   ├── appState.js             # Global state store
+│   ├── config.js               # Centralized config aggregator
+│   ├── config/
+│   │   ├── actions.js          # Declarative UI/action sequences
+│   │   ├── api.js              # API/base URL + Webflow config
+│   │   ├── map.js              # Mapbox tokens, style, camera
+│   │   └── ui.js               # DOM selectors and UI constants
+│   ├── dataController.js       # Prefetches / caches API data
+│   ├── eventBus.js             # Pub/Sub event bus
+│   ├── mapController.js        # Mapbox GL JS integration & events
+│   ├── uiController.js         # DOM rendering & sidebars
+│   ├── utils.js                # Utilities
+│   └── mockAPI.js              # Frontend-only mock fallbacks (used on failure)
+├── index.js                    # App entry point
+├── server.js                   # Optional static server (use Vercel CLI for API)
+├── vercel.json                 # CORS headers for deployment
 └── README.md                   # This file
 ```
 
@@ -64,19 +69,18 @@ salty-development-2/
 
 ### Prerequisites
 
-- Node.js (v14 or later recommended)
-- npm (usually comes with Node.js)
+- Node.js 18+ and npm
 - Vercel CLI (`npm i -g vercel`)
-- A Mapbox Access Token
-- A Webflow API Token and Collection ID
+- A Mapbox access token and style URL
+- A Webflow API token and collection IDs
 
 ### Installation & Setup
 
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/salty-development-2.git
-    cd salty-development-2
+    git clone https://github.com/your-username/salty.git
+    cd salty
     ```
 
 2.  **Install dependencies:**
@@ -85,59 +89,55 @@ salty-development-2/
     npm install
     ```
 
-3.  **Set up environment variables:**
-    Create a `.env.local` file in the root of the project by copying the example file:
+3.  **Create `.env.local`:**
+    Create a file named `.env.local` in the project root with the following variables:
+
     ```bash
-    cp .env.local.example .env.local
-    ```
-    Open `.env.local` and add your secret keys and IDs:
-    ```
+    # Webflow API credentials (required)
     WEBFLOW_API_TOKEN="YOUR_WEBFLOW_API_TOKEN"
     BEACHES_COLLECTION_ID="YOUR_WEBFLOW_BEACHES_COLLECTION_ID"
+    POI_COLLECTION_ID="YOUR_WEBFLOW_POI_COLLECTION_ID"
     ```
 
 4.  **Configure the application:**
-    Open `js/config/api.js` and `js/config/map.js` to update the following values:
-    - `MAP.ACCESS_TOKEN`: Add your Mapbox access token here.
-    - `MAP.STYLE`: Set this to your Mapbox Studio style URL.
-    - `API.BASE_URL`: Ensure this points to `http://localhost:3000` for local development.
+    Update the following files:
 
-5.  **Start the development server:**
-    The `server.js` file combined with the Vercel CLI creates a local environment that mirrors the production serverless setup.
+    - `js/config/map.js`
+      - `ACCESS_TOKEN`: Your Mapbox token
+      - `STYLE`: Your Mapbox Studio style URL
+    - `js/config/api.js`
+      - `apiConfig.BASE_URL`
+        - For local development: `http://localhost:3000`
+        - For production: your deployed domain (e.g., `https://your-app.vercel.app`)
+
+5.  **Run locally:**
+    Use the Vercel CLI to run the static site and serverless API locally with your env vars loaded:
+
     ```bash
     npm run dev:local
     ```
-    The application will be available at `http://localhost:3000`.
+
+    Your app will be available at `http://localhost:3000`.
+
+    Note: `npm start` will run `server.js` (simple static server). Prefer `npm run dev:local` for full API emulation.
 
 ## Configuration (`config.js`)
 
-The `js/config.js` file and the surrounding `js/config/` directory are the most important places for customizing the application's behavior.
+The `js/config.js` file aggregates configuration from `js/config/`.
 
-### Map Configuration (`js/config/map.js`)
+### Map (`js/config/map.js`)
 
-The `MAP` object contains all settings for the Mapbox instance (token, style URL, initial camera position, zoom levels, etc.).
+- `ACCESS_TOKEN`, `STYLE`, default camera settings.
 
-### API Configuration (`js/config/api.js`)
+### API (`js/config/api.js`)
 
-The `API` object defines the endpoints for the backend. The `server.js` file will route requests from the frontend to the corresponding files in the `/api` directory.
+- `apiConfig.BASE_URL`: The base origin that serves your API routes (`/api/*`).
+- `webflowConfig`: Static identifiers used by the frontend where needed.
 
-### Event Actions (`js/config/actions.js`)
+### UI & Actions
 
-`EVENT_ACTIONS` is the core of the application's interactivity. It defines named sequences of actions that can be triggered by user interactions.
-
-**Example:**
-
-```javascript
-selectBeach: {
-  description: "Action when a single beach is clicked.",
-  actions: [
-    { type: "FLY_TO", zoomLevel: 14, speed: 1.5 },
-    { type: "UPDATE_APP_STATE" },
-    { type: "SHOW_SIDEBAR", sidebar: "detail" },
-    { type: "SHOW_POPUP", delay: 100 },
-  ],
-},
-```
+- `js/config/ui.js`: DOM selectors and UI constants.
+- `js/config/actions.js`: Declarative action sequences dispatched by the `ActionController`.
 
 ### DOM Selectors (`js/config/ui.js`)
 
@@ -159,39 +159,51 @@ The `SELECTORS` object maps logical names to CSS selectors. It is highly recomme
 4.  **Event Subscriptions**: Other modules (`MapController`, `UIController`) are subscribed to these events and perform their respective actions (flying the map, showing a sidebar, etc.).
 5.  **State Changes**: `AppState` is updated, which may trigger further events (like `state:selectionChanged`) to cause UI components to re-render with new data.
 
-### Backend: Vercel-style API Routes
+### Backend: Serverless-style API Routes
 
-The project uses a local Express server (`server.js`) to emulate the behavior of Vercel's serverless functions.
+The project uses Vercel-style serverless functions under `/api` and is intended to run locally with `vercel dev`.
 
-- Any `.js` file placed in the `/api` directory automatically becomes an API endpoint.
-- For example, a request to `GET /api/beaches` on the frontend will be handled by the logic in `api/beaches.js` on the backend.
-- This structure allows for a clean separation of frontend and backend concerns and makes deployment to a platform like Vercel seamless.
+- Any `.js` file placed in the `/api` directory becomes an API endpoint.
+- For example, `GET /api/beaches` is handled by `api/beaches.js`, and `GET /api/pois` by `api/pois.js`.
+- `server.js` can serve static files, but for API development you should use `npm run dev:local` (Vercel CLI).
 
 ## API Integration
 
-The application is architected to fetch data from a live Webflow CMS backend. The `mockAPI.js` file has been deprecated.
+The application fetches data from a live Webflow CMS via the serverless functions in `/api`. The frontend may fall back to `mockAPI.js` only when live calls fail.
 
-### `api/beaches.js`
+### Endpoints
 
-This file is the heart of the backend integration. It is responsible for:
-1.  **Fetching All Items**: It handles the pagination of the Webflow API to retrieve the complete list of beach items.
-2.  **Fetching the Schema**: It dynamically fetches the Webflow Collection's schema to understand the structure of the data, particularly for `Option` fields.
-3.  **Data Transformation**: It contains a powerful `transformBeaches` function that cleans, formats, and restructures the raw JSON from Webflow into a format that is easy for the frontend to consume. This includes:
-    - Mapping relational IDs (for amenities, states) to human-readable names.
-    - Parsing and cleaning numerical data from string fields.
-    - Normalizing the data structure for consistency.
+- `GET /api/beaches`
 
-To connect to your Webflow instance, you must provide your API token and Collection ID in the `.env.local` file.
+  - Fetches all items from the Beaches collection (with pagination) and transforms them into a frontend-friendly format.
+  - Requires environment vars: `WEBFLOW_API_TOKEN`, `BEACHES_COLLECTION_ID`.
+
+- `GET /api/pois`
+  - Fetches all items from the POIs collection and transforms them.
+  - Requires environment vars: `WEBFLOW_API_TOKEN`, `POI_COLLECTION_ID`.
+
+### Quick test (from terminal)
+
+```bash
+curl -s http://localhost:3000/api/beaches | head -n 20
+curl -s http://localhost:3000/api/pois | head -n 20
+```
+
+Both endpoints use Webflow v2 APIs and map `Option` field IDs to readable names where possible.
 
 ## Deployment
 
-This project is optimized for deployment on [Vercel](https://vercel.com). The `vercel.json` file is pre-configured to handle the serverless API routes.
+This project is optimized for deployment on Vercel.
 
-To deploy:
-1.  Push your code to a Git repository (GitHub, GitLab, etc.).
-2.  Import the project into Vercel.
-3.  Configure the Environment Variables (`WEBFLOW_API_TOKEN`, `BEACHES_COLLECTION_ID`, and your Mapbox token if you choose to make it private) in the Vercel project settings.
-4.  Vercel will automatically build and deploy the application.
+1. Push your code to a Git repository (GitHub, GitLab, etc.).
+2. Import the project into Vercel.
+3. Set Environment Variables in Vercel:
+   - `WEBFLOW_API_TOKEN`
+   - `BEACHES_COLLECTION_ID`
+   - `POI_COLLECTION_ID`
+   - (Optional) Make your Mapbox token private and inject it at build time or via runtime config.
+4. Deploy. Vercel will expose `/api/*` endpoints.
 
-While it can be deployed to other static hosting services, Vercel's handling of the `/api` directory provides the most seamless experience.
+### CORS
 
+`vercel.json` sets permissive headers for production domains. Update `vercel.json` (and `server.js` CORS origins if you use it) to match your domains.
