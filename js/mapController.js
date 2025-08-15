@@ -321,21 +321,10 @@ export const MapController = {
     const showButton = details ? details.button : properties.button;
     const buttonText = details ? details.buttonText : properties.buttonText;
 
-    const popupHTML = `
-      <div class="popup_component" style="cursor: pointer;">
-        <img src="${
-          imageUrl ||
-          "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300"
-        }"
-             alt="${name}"
-             class="popup_image"
-             style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px;">
-        <h4 class="popup_title" style="margin: 10px 0 5px 0; font-size: 16px;">${name}</h4>
-        <p class="popup_address" style="margin: 0; color: #666; font-size: 14px;">${
-          address || "Address not available"
-        }</p>
-      </div>
-    `;
+    // Create a new URL object from the string
+    const url = new URL(website);
+    // Access the .hostname property
+    const hostname = url.hostname;
 
     const popupHTML2 = `
       <div class="popup_component">
@@ -356,10 +345,7 @@ export const MapController = {
        ${hours ? `<p class="popup_hours">Hours: ${hours}</p>` : ""}
        ${
          website
-           ? `<a href="${website}" target="_blank" class="salty-link">${website.replace(
-               /^https?:\/\//,
-               ""
-             )}</a>`
+           ? `<a href="${website}" target="_blank" class="salty-link">${hostname}</a>`
            : ""
        }
        ${
