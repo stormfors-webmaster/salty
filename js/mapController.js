@@ -12,12 +12,12 @@ import { ActionController } from "./actionController.js";
 
 export const MapController = {
   LAYER_IDS: {
-    STATES: "salty-state",
-    CALIFORNIA: "California",
-    HAWAII: "Hawaii",
-    REGIONS: "salty-city",
-    BEACHES: "salty-beaches",
-    POIS: "salty-pois", // POI layer from Mapbox Studio style
+    STATES: "state-labels",
+    CALIFORNIA: "fill-california",
+    HAWAII: "fill-hawaii",
+    REGIONS: "region-lables",
+    BEACHES: "beach-labels",
+    POIS: "poi-labels",
   },
   hoveredFeature: null,
 
@@ -38,6 +38,11 @@ export const MapController = {
         zoom: Config.MAP.DEFAULT_ZOOM,
         pitch: Config.MAP.START_PITCH,
       });
+
+      if (!Config.MAP.ALLOW_ROTATION) {
+        map.dragRotate.disable();
+        map.touchZoomRotate.disableRotation();
+      }
 
       map.on("load", () => {
         AppState.dispatch({ type: "SET_MAP_INSTANCE", payload: map });

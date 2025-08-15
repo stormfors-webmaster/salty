@@ -14,7 +14,10 @@ export const FeatureListView = {
    * @param {string} type - The type of feature ('beach', 'region', 'state')
    */
   renderFeatureList(features = [], type = "beach") {
-    console.log(`[FeatureListView] renderFeatureList for type: ${type}`, features);
+    console.log(
+      `[FeatureListView] renderFeatureList for type: ${type}`,
+      features
+    );
     const listContainer = AppState.getUICachedElement("BEACH_LIST_CONTAINER");
 
     if (!listContainer) {
@@ -25,7 +28,7 @@ export const FeatureListView = {
     }
 
     listContainer.innerHTML = "";
-    
+
     if (features.length === 0) {
       listContainer.innerHTML =
         '<p style="padding: 20px; text-align: center;">No items in view. Pan or zoom the map to find some.</p>';
@@ -91,12 +94,35 @@ export const FeatureListView = {
     const cachedFeature = visibleFeatures.get(String(entityId));
 
     if (!cachedFeature) {
-      console.warn(`[UIController] Feature with ID ${entityId} not found in cache. List item may not work correctly.`);
+      console.warn(
+        `[UIController] Feature with ID ${entityId} not found in cache. List item may not work correctly.`
+      );
     }
 
     listItem.dataset.entityType = type;
     listItem.dataset.featureId = entityId;
     listItem.setAttribute("action-trigger", config.actionName);
+
+    // Visibility logic
+    const locationClusterText =
+      config.dataMapping['[beach-list-item="location-cluster"]']?.source(
+        properties
+      ) || "";
+    const stateText =
+      config.dataMapping['[beach-list-item="state"]']?.source(properties) || "";
+
+    const locationWrapper = listItem.querySelector(
+      '[beach-list-item="location-wrapper"]'
+    );
+    if (locationWrapper) {
+      locationWrapper.style.display = locationClusterText ? "flex" : "none";
+    }
+
+    const delimiter = listItem.querySelector('[beach-list-item="delimiter"]');
+    if (delimiter) {
+      delimiter.style.display =
+        locationClusterText && stateText ? "inline" : "none";
+    }
 
     for (const selector in config.dataMapping) {
       const el = listItem.querySelector(selector);
@@ -124,4 +150,4 @@ export const FeatureListView = {
 
     return listItem;
   },
-}; 
+};
