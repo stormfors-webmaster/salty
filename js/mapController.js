@@ -321,10 +321,16 @@ export const MapController = {
     const showButton = details ? details.button : properties.button;
     const buttonText = details ? details.buttonText : properties.buttonText;
 
-    // Create a new URL object from the string
-    const url = new URL(website);
-    // Access the .hostname property
-    const hostname = url.hostname;
+    // Safely derive hostname from website URL if present
+    let hostname = "";
+    if (website) {
+      try {
+        const url = new URL(website);
+        hostname = url.hostname;
+      } catch (e) {
+        hostname = "";
+      }
+    }
 
     const popupHTML2 = `
       <div class="popup_component">
